@@ -87,12 +87,12 @@ class PriceSeries:
     @classmethod
     def from_csv(cls, symbol: str, csv_path: Union[str, Path]) -> "PriceSeries":
         """
-        Load a Yahoo Finance CSV into a PriceSeries.
+        Load a Stooq daily CSV/TXT file into a PriceSeries.
 
-        Exception Handling Approach #1:
-        - Catches file / parsing errors and re-raises with a clearer message.
+        Stooq files use columns like <DATE>, <OPEN>, ... and date format YYYYMMDD.
         """
         path = Path(csv_path)
+
         try:
             df = pd.read_csv(path)
         except FileNotFoundError as e:
@@ -100,7 +100,25 @@ class PriceSeries:
         except pd.errors.ParserError as e:
             raise ValueError(f"Could not parse CSV (bad format): {path}") from e
 
+        # Stooq -> standard columns
+        df = df.rename(columns={
+            "<DATE>": "Date",
+            "<OPEN>": "Open",
+            "<HIGH>": "High",
+            "<LOW>": "Low",
+            "<CLOSE>": "Close",
+            "<VOL>": "Volume",
+        })
+
+        # Convert YYYYMMDD -> datetime (errors coerced just in case)
+        df["Date"] = pd.to_datetime(df["Date"], format="%Y%m%d", errors="coerce")
+
+        # Keep only the columns your validator expects
+        df = df[["Date", "Open", "High", "Low", "Close", "Volume"]]
+
         return cls(symbol=symbol, df=df, source_path=path)
+
+
 
     def clean_and_validate(self) -> None:
         """
