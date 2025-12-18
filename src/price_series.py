@@ -222,6 +222,69 @@ class PriceSeries:
         drawdown = (closes / rolling_max) - 1.0
         return float(drawdown.min())
 
+    def rsi(self, window: int = 14) -> pd.Series:
+        """
+        Calculate Relative Strength Index (RSI) for this price series.
+        
+        Uses the indicators module to compute RSI on Close prices.
+        
+        Parameters
+        ----------
+        window : int, default 14
+            Number of periods for RSI calculation.
+        
+        Returns
+        -------
+        pd.Series
+            RSI values indexed by date.
+        """
+        from src.indicators import rsi as calc_rsi
+        return calc_rsi(self.close_prices(), window=window)
+
+    def macd(self, fast: int = 12, slow: int = 26, signal: int = 9) -> pd.DataFrame:
+        """
+        Calculate MACD (Moving Average Convergence Divergence) for this price series.
+        
+        Uses the indicators module to compute MACD on Close prices.
+        
+        Parameters
+        ----------
+        fast : int, default 12
+            Period for fast EMA.
+        slow : int, default 26
+            Period for slow EMA.
+        signal : int, default 9
+            Period for signal line EMA.
+        
+        Returns
+        -------
+        pd.DataFrame
+            DataFrame with columns: 'MACD', 'Signal', 'Histogram'
+        """
+        from src.indicators import macd as calc_macd
+        return calc_macd(self.close_prices(), fast=fast, slow=slow, signal=signal)
+
+    def bollinger_bands(self, window: int = 20, num_std: float = 2.0) -> pd.DataFrame:
+        """
+        Calculate Bollinger Bands for this price series.
+        
+        Uses the indicators module to compute Bollinger Bands on Close prices.
+        
+        Parameters
+        ----------
+        window : int, default 20
+            Period for moving average.
+        num_std : float, default 2.0
+            Number of standard deviations for bands.
+        
+        Returns
+        -------
+        pd.DataFrame
+            DataFrame with columns: 'Upper', 'Middle', 'Lower'
+        """
+        from src.indicators import bollinger_bands as calc_bb
+        return calc_bb(self.close_prices(), window=window, num_std=num_std)
+
     def __add__(self, other: "PriceSeries") -> "PriceSeries":
         """
         Operator overloading: merge two PriceSeries objects into one.
